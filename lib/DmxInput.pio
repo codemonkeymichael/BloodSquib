@@ -11,7 +11,7 @@
 restart:
 
 break_reset:
-    set x, 28                           ; Setup a counter to count the iterations on break_loop
+    set x, 18                           ;28 Setup a counter to count the iterations on break_loop
 
 break_loop:                             ; Break loop lasts for 3us. The entire break must be minimum 29*3us = 87us
     jmp pin break_reset                 ; Go back to start if pin goes high during the break
