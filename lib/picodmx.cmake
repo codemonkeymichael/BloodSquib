@@ -7,17 +7,17 @@ cmake_minimum_required(VERSION 3.12)
 add_library(picodmx INTERFACE)
 
 target_sources(picodmx INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/src/DmxInput.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/DmxOutput.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/DmxInput.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/DmxOutput.cpp
 )
 
 pico_generate_pio_header(picodmx
-    ${CMAKE_CURRENT_LIST_DIR}/extras/DmxInput.pio
+    ${CMAKE_CURRENT_LIST_DIR}/DmxInput.pio
 )
 pico_generate_pio_header(picodmx
-    ${CMAKE_CURRENT_LIST_DIR}/extras/DmxOutput.pio
+    ${CMAKE_CURRENT_LIST_DIR}/DmxOutput.pio
 )
 
 target_include_directories(picodmx INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/src
+    ${CMAKE_CURRENT_LIST_DIR}
 )
