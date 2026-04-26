@@ -1,19 +1,93 @@
-# DMX Trigger Output #
+# BloodSquib - DMX Trigger Controller
 
-Reads DMX frames from port A, channel 1-4 drives digital output 1-4
+A DMX Core Pi Pico 2-based DMX controller that triggers digital outputs based on DMX channel values. Designed for special effects applications like blood squibs or other pyrotechnic triggers.
 
-Build 
+## Features
 
-D:\repos\BloodSquib> cmake --build build
+- **DMX Input**: Reads DMX512 signals from a wireless or wired DMX controller
+- **Digital Outputs**: Controls GPIO pins with 500ms pulse outputs
+- **Edge Detection**: Triggers only on rising edges (when DMX channel goes from ≤50 to >50)
+- **Status LEDs**: Visual indicators for DMX signal reception and system status
 
-No problem at all—rest up! Troubleshooting custom timing on a PIO (Programmable I/O) can be a real headache.
-Before you go, here is a quick recap of where we stand so you can jump back in tomorrow:
+## DMX Channel Mapping
 
-* The Problem: The DMX Core Pico 2 works with a cable but "ignores" the Donner wireless signal, even though your other lights respond to it.
-* Failed Fixes: We tried lowering the "Break" detection threshold and the baud rate, but it didn't trigger the signal.
-* The "Tomorrow" Plan: We should look at Signal Polarity and Electrical Levels. If the Donner receiver is outputting an inverted signal (Idling Low instead of High) or using 5V logic that the Pico 2 is struggling to read, that would explain why the software changes didn't help. [1] 
+- **DMX Channel 1** → **IO 2** (GPIO 16) - Triggers when channel value > 50
+- **DMX Channel 2** → **IO 3** (GPIO 17) - Triggers when channel value > 50
 
-Quick check for tomorrow morning: When you have a chance, see if your Donner receiver has a polarity switch or if you have a multimeter to check the resting voltage on the data pin.
-Talk tomorrow!
+## Hardware Requirements
 
-[1] [https://support.enttec.com](https://support.enttec.com/support/solutions/articles/101000396247-dmx-basics-troubleshooting)
+- **DMX Core Pi Pico 2** board (Raspberry Pi Pico 2 based)
+- DMX input circuit (wireless DMX receiver or DMX-to-serial converter)
+- GPIO pins 16 and 17 connected to your trigger devices
+
+## Pin Configuration
+
+- **DMX Input**: GPIO 7 (DMX data input)
+- **DMX Enable**: GPIO 3 (DMX receiver enable)
+- **IO 2 Output**: GPIO 16 (DMX Channel 1 trigger)
+- **IO 3 Output**: GPIO 17 (DMX Channel 2 trigger)
+- **Status LED**: GPIO 24 (DMX port A indicator)
+- **Indicator LED**: GPIO 25 (System status)
+
+## Building the Project
+
+### Prerequisites
+
+- CMake (3.13 or later)
+- Raspberry Pi Pico SDK
+- C/C++ compiler (GCC)
+
+### Build Steps
+
+1. Clone or download this repository
+2. Ensure Pico SDK is installed and `PICO_SDK_PATH` environment variable is set
+3. Open a terminal in the project directory
+4. Run the build script:
+
+```bash
+.\build.bat
+```
+
+Or manually:
+
+```bash
+cmake -S . -B build
+cmake --build build --config Release
+```
+
+## Deploying to Raspberry Pi Pico
+
+1. **Put your DMX Core Pi Pico 2 into bootloader mode**:
+   - Hold the BOOTSEL button while plugging in the board
+   - Or press the reset button if your board has one
+
+2. **The board will appear as a USB drive** called "RPI-RP2"
+
+3. **Flash the firmware**:
+   - Drag and drop the `build\bloodsquib.uf2` file to the RPI-RP2 drive
+
+4. **The board will automatically reboot** and start running the DMX controller
+
+## Usage
+
+1. Connect your DMX input to GPIO 7
+2. Connect your trigger devices to GPIO 16 (IO 2) and GPIO 17 (IO 3)
+3. Power on the Pico
+4. Send DMX signals to channels 1 and 2 with values > 50 to trigger the outputs
+
+## Troubleshooting
+
+- **No DMX signal detected**: Check DMX wiring and ensure DMX enable pin (GPIO 3) is properly configured
+- **Outputs not triggering**: Verify GPIO connections and check DMX channel values
+- **Build errors**: Ensure Pico SDK is properly installed and environment variables are set
+
+## Technical Details
+
+- **DMX Protocol**: DMX512 at 250kbps
+- **Pulse Duration**: 500ms (0.5 seconds)
+- **Trigger Threshold**: DMX value > 50 (out of 255)
+- **Edge Detection**: Rising edge only (prevents continuous triggering)
+
+## License
+
+This project is open source. Please check individual source files for license information.

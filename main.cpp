@@ -11,6 +11,7 @@ const uint DMXENA1_PIN = 3;
 
 const uint OUTPUT_PIN1 = 15;
 const uint OUTPUT_PIN2 = 16;
+const uint OUTPUT_PIN3 = 17;
 
 const uint LED_PIN_DMXPORTA = 24;
 const uint LED_PIN_INDICATOR = 25;
@@ -57,6 +58,11 @@ uint64_t pulseStartTime = 0;    // When the pulse started
 bool lastChannelState2 = false; // Track previous state for channel 2
 bool pulseActive2 = false;      // Whether pulse 2 is currently active
 uint64_t pulseStartTime2 = 0;   // When pulse 2 started
+
+// Channel 3 pulse tracking (for DMX channel 2)
+bool lastChannelState3 = false; // Track previous state for channel 3
+bool pulseActive3 = false;      // Whether pulse 3 is currently active
+uint64_t pulseStartTime3 = 0;   // When pulse 3 started
 
 
 bool repeating_timer_callback(struct repeating_timer *t) {
@@ -135,7 +141,7 @@ void __isr dmxDataReceived(DmxInput* instance) {
 
             //printf("DMX Input 1 dmxInputBuffer1[1]: %s\n" , dmxInputBuffer1[1]);
 
-            // Have channel 1 control Output 1 with pulse, 2=2, 3=3, 4=4
+            // Have DMX channel 1 control IO 2 (OUTPUT_PIN2) with pulse
             bool currentChannelState = dmxInputBuffer1[1] > 50;
             
             // Detect rising edge (transition from off to on)
@@ -143,25 +149,25 @@ void __isr dmxDataReceived(DmxInput* instance) {
                 // Channel just turned on, start pulse
                 pulseActive = true;
                 pulseStartTime = time_us_64();
-                gpio_put(OUTPUT_PIN1, 1);  // Turn on GPIO 1
-                printf("DMX Channel 1 > 50: GPIO 1 ON\n");
+                gpio_put(OUTPUT_PIN2, 1);  // Turn on IO 2
+                printf("DMX Channel 1 > 50: IO 2 ON\n");
             }
             
             lastChannelState = currentChannelState;
             
-            // Have channel 2 control Output 2 with pulse
-            bool currentChannelState2 = dmxInputBuffer1[2] > 50;
+            // Have DMX channel 2 control IO 3 (OUTPUT_PIN3) with pulse
+            bool currentChannelState3 = dmxInputBuffer1[2] > 50;
             
-            // Detect rising edge for channel 2
-            if (currentChannelState2 && !lastChannelState2) {
-                // Channel 2 just turned on, start pulse
-                pulseActive2 = true;
-                pulseStartTime2 = time_us_64();
-                gpio_put(OUTPUT_PIN2, 1);  // Turn on GPIO 2
-                printf("DMX Channel 2 > 50: GPIO 2 ON\n");
+            // Detect rising edge for DMX channel 2
+            if (currentChannelState3 && !lastChannelState3) {
+                // DMX Channel 2 just turned on, start pulse
+                pulseActive3 = true;
+                pulseStartTime3 = time_us_64();
+                gpio_put(OUTPUT_PIN3, 1);  // Turn on IO 3
+                printf("DMX Channel 2 > 50: IO 3 ON\n");
             }
             
-            lastChannelState2 = currentChannelState2;
+            lastChannelState3 = currentChannelState3;
         }
     }
 }
@@ -181,6 +187,7 @@ int main() {
 
     gpio_init(OUTPUT_PIN1);
     gpio_init(OUTPUT_PIN2);
+    gpio_init(OUTPUT_PIN3);
 
     gpio_init(LED_PIN_DMXPORTA);
     //gpio_init(LED_PIN_DMXPORTB);
@@ -188,6 +195,7 @@ int main() {
 
     gpio_set_dir(OUTPUT_PIN1, GPIO_OUT);
     gpio_set_dir(OUTPUT_PIN2, GPIO_OUT);
+    gpio_set_dir(OUTPUT_PIN3, GPIO_OUT);
 
     gpio_set_dir(LED_PIN_DMXPORTA, GPIO_OUT);
     gpio_set_dir(LED_PIN_INDICATOR, GPIO_OUT);
@@ -195,6 +203,7 @@ int main() {
     // Set initial state
     gpio_put(OUTPUT_PIN1, 0);
     gpio_put(OUTPUT_PIN2, 0);
+    gpio_put(OUTPUT_PIN3, 0);
 
     gpio_put(LED_PIN_DMXPORTA, 0);
     gpio_put(LED_PIN_INDICATOR, 0);
@@ -228,16 +237,16 @@ int main() {
         
         // Check if pulse timeout has elapsed (500ms = 500000 microseconds)
         if (pulseActive && (time_us_64() - pulseStartTime) > 500000) {
-            gpio_put(OUTPUT_PIN1, 0);  // Turn off GPIO 1
-            printf("GPIO 1 OFF after 500ms\n");
+            gpio_put(OUTPUT_PIN2, 0);  // Turn off IO 2
+            printf("IO 2 OFF after 500ms\n");
             pulseActive = false;
         }
         
-        // Check if pulse 2 timeout has elapsed
-        if (pulseActive2 && (time_us_64() - pulseStartTime2) > 500000) {
-            gpio_put(OUTPUT_PIN2, 0);  // Turn off GPIO 2
-            printf("GPIO 2 OFF after 500ms\n");
-            pulseActive2 = false;
+        // Check if pulse 3 timeout has elapsed
+        if (pulseActive3 && (time_us_64() - pulseStartTime3) > 500000) {
+            gpio_put(OUTPUT_PIN3, 0);  // Turn off IO 3
+            printf("IO 3 OFF after 500ms\n");
+            pulseActive3 = false;
         }
 
         sleep_ms(500);
